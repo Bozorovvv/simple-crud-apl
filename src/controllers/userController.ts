@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from "http";
-import { validate, v4 as uuidv4 } from "uuid";
+import { validate } from "uuid";
 import { parseRequestBody } from "../utils/parseReqBody";
 import { createUser, IUser } from "../model/user";
 
