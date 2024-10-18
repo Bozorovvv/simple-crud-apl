@@ -1,34 +1,37 @@
 import { IUser } from "./model/user";
 
-class UserDataBase {
-  private users: IUser[] = [];
+let users: IUser[] = [];
 
-  getUsers(): IUser[] {
-    return this.users;
-  }
-  getUserById(id: string): IUser | undefined {
-    return this.users.find((user) => user.id === id);
-  }
-  addUser(user: IUser): void {
-    this.users.push(user);
-  }
+async function getUsers(): Promise<IUser[]> {
+  return users;
+}
 
-  updateUser(id: string, updatedUser: IUser): IUser | undefined {
-    const existingUser = this.getUserById(id);
-    if (existingUser) {
-      Object.assign(existingUser, updatedUser);
-      return updatedUser;
-    } else {
-      return undefined;
-    }
-  }
+async function getUserById(id: string): Promise<IUser | undefined> {
+  return users.find((user) => user.id === id);
+}
 
-  deleteUser(id: string): boolean {
-    const index = this.users.findIndex((user) => user.id === id);
-    if (index === -1) return false;
-    this.users.splice(index, 1);
-    return true;
+async function addUser(user: IUser): Promise<void> {
+  users.push(user);
+}
+
+async function updateUser(
+  id: string,
+  updatedUser: IUser
+): Promise<IUser | undefined> {
+  const existingUser = await getUserById(id);
+  if (existingUser) {
+    Object.assign(existingUser, updatedUser);
+    return updatedUser;
+  } else {
+    return undefined;
   }
 }
 
-export const db = new UserDataBase();
+async function deleteUser(id: string): Promise<boolean> {
+  const index = users.findIndex((user) => user.id === id);
+  if (index === -1) return false;
+  users.splice(index, 1);
+  return true;
+}
+
+export { getUsers, addUser, updateUser, deleteUser, getUserById };

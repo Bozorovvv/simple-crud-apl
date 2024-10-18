@@ -1,3 +1,4 @@
+import { HttpMethod } from "./types/commonTypes";
 import { createServer } from "http";
 import {
   createUserHandler,
@@ -8,22 +9,55 @@ import {
 } from "./controllers/userController";
 import { notFound } from "./utils/notFound";
 
-const server = createServer((req, res) => {
+const server = createServer(async (req, res) => {
   const { method, url } = req;
-  const userId = url?.split("/")[3];
 
-  if (url === "/api/users" && method === "GET") {
-    getAllUsers(req, res);
-  } else if (url?.match(/^\/api\/users\/[\w-]+$/) && method === "GET") {
-    getUserById(req, res, userId!);
-  } else if (url === "/api/users" && method === "POST") {
-    createUserHandler(req, res);
-  } else if (url?.match(/^\/api\/users\/[\w-]+$/) && method === "PUT") {
-    updateUserHandler(req, res, userId!);
-  } else if (url?.match(/^\/api\/users\/[\w-]+$/) && method === "DELETE") {
-    deleteUserHandler(req, res, userId!);
-  } else {
-    notFound(req, res);
+  const isUsersRoute = url?.startsWith("/api/users");
+  const userId = url?.split("/")[3] ?? null;
+
+  try {
+    switch (method) {
+      case HttpMethod.GET:
+        if (url === "/api/users") {
+          await getAllUsers(req, res);
+        } else if (isUsersRoute && userId) {
+          await getUserById(req, res, userId);
+        } else {
+          notFound(req, res);
+        }
+        break;
+
+      case HttpMethod.POST:
+        if (url === "/api/users") {
+          await createUserHandler(req, res);
+        } else {
+          notFound(req, res);
+        }
+        break;
+
+      case HttpMethod.PUT:
+        if (isUsersRoute && userId) {
+          await updateUserHandler(req, res, userId);
+        } else {
+          notFound(req, res);
+        }
+        break;
+
+      case HttpMethod.DELETE:
+        if (isUsersRoute && userId) {
+          await deleteUserHandler(req, res, userId);
+        } else {
+          notFound(req, res);
+        }
+        break;
+
+      default:
+        notFound(req, res);
+        break;
+    }
+  } catch (error) {
+    res.statusCode = 500;
+    res.end("Internal Server Error");
   }
 });
 

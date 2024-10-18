@@ -1,6 +1,6 @@
 import { IncomingMessage } from "http";
 
-export const parseRequestBody = (
+export const parseRequestBody = async (
   req: IncomingMessage,
   callback: (body: any) => void
 ) => {
