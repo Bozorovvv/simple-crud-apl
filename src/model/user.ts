@@ -7,10 +7,10 @@ export interface IUser {
   hobbies: string[];
 }
 
-export function createUser(
+export async function createUser(
   username: string,
   age: number,
   hobbies: string[]
-): IUser {
+): Promise<IUser> {
   return { id: uuidv4(), username, age, hobbies };
 }

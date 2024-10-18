@@ -1,12 +1,13 @@
 import { IncomingMessage, ServerResponse } from "http";
-import * as db from "../db";
-import { validate } from "uuid";
-import { createUser } from "../model/user";
+import { validate, v4 as uuidv4 } from "uuid";
 import { parseRequestBody } from "../utils/parseReqBody";
+import { createUser, IUser } from "../model/user";
+
+let users: Map<string, IUser> = new Map();
 
 const getAllUsers = async (req: IncomingMessage, res: ServerResponse) => {
   try {
-    const allUsers = await db.getUsers();
+    const allUsers = Array.from(users.values());
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(allUsers));
   } catch (error) {
@@ -26,7 +27,7 @@ const getUserById = async (
     return;
   }
   try {
-    const user = await db.getUserById(userId);
+    const user = users.get(userId);
     if (!user) {
       res.writeHead(404, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "User not found" }));
@@ -51,8 +52,18 @@ const createUserHandler = async (req: IncomingMessage, res: ServerResponse) => {
         );
         return;
       }
-      const newUser = createUser(username, age, hobbies);
-      await db.addUser(newUser);
+
+      if (
+        Array.from(users.values()).some((user) => user.username === username)
+      ) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ message: "Username already exists" }));
+        return;
+      }
+
+      const newUser: IUser = await createUser(username, age, hobbies);
+
+      users.set(newUser.id, newUser);
       res.writeHead(201, { "Content-Type": "application/json" });
       res.end(JSON.stringify(newUser));
     });
@@ -67,13 +78,20 @@ const updateUserHandler = async (
   res: ServerResponse,
   userId: string
 ) => {
+  if (!validate(userId)) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Invalid user ID" }));
+    return;
+  }
   try {
-    parseRequestBody(req, async (body) => {
-      const updatedUser = await db.updateUser(userId, body);
-      if (!updatedUser) {
+    parseRequestBody(req, (body) => {
+      const user = users.get(userId);
+      if (!user) {
         res.writeHead(404, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "User not found" }));
       } else {
+        const updatedUser = { ...user, ...body };
+        users.set(userId, updatedUser);
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify(updatedUser));
       }
@@ -95,8 +113,8 @@ const deleteUserHandler = async (
     return;
   }
   try {
-    const deletedUser = await db.deleteUser(userId);
-    if (!deletedUser) {
+    const deleted = users.delete(userId);
+    if (!deleted) {
       res.writeHead(404, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "User not found" }));
     } else {
