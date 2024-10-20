@@ -127,10 +127,16 @@ const deleteUserHandler = async (
   }
 };
 
+const notFound = (req: IncomingMessage, res: ServerResponse) => {
+  res.writeHead(404, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ message: "Endpoint not found" }));
+};
+
 export {
   getAllUsers,
   getUserById,
   createUserHandler,
   updateUserHandler,
   deleteUserHandler,
+  notFound,
 };

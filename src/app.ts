@@ -5,9 +5,9 @@ import {
   deleteUserHandler,
   getAllUsers,
   getUserById,
+  notFound,
   updateUserHandler,
 } from "./controllers/userController";
-import { notFound } from "./utils/notFound";
 
 const server = createServer(
   async (req: IncomingMessage, res: ServerResponse) => {
