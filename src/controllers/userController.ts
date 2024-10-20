@@ -44,6 +44,7 @@ const getUserById = async (
 const createUserHandler = async (req: IncomingMessage, res: ServerResponse) => {
   try {
     parseRequestBody(req, async (body) => {
+      console.log(body);
       const { username, age, hobbies } = body;
       if (!username || typeof age !== "number" || !Array.isArray(hobbies)) {
         res.writeHead(400, { "Content-Type": "application/json" });
